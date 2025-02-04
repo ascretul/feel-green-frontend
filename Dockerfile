@@ -1,19 +1,11 @@
-FROM node:18-alpine
-
-# Set working directory
-WORKDIR /var/www/html
-
-# Install dependencies
-COPY package*.json ./
+# Stage 1: Build Angular app
+FROM node:latest as builder
+WORKDIR /app
+COPY ./ /app 
 RUN npm install
+RUN npm run build
 
-RUN apk add --no-cache bash
-
-# Copy application code
-COPY . .
-
-# Expose port for development server
-EXPOSE 4200
-
-# Start Angular development server
-CMD ["npm", "start", "--", "--host", "0.0.0.0"]
+# Stage 2: Serve with Nginx
+FROM nginx:latest
+COPY --from=builder /app/dist/frontend /usr/share/nginx/html
+EXPOSE 80
